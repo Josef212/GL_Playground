@@ -16,6 +16,7 @@ using namespace std;
 #include "Shader.h"
 #include "Model.h"
 #include "Ligth.h"
+#include "Editor.h"
 
 //GLM
 #include <glm\glm.hpp>
@@ -30,22 +31,35 @@ using namespace std;
 
 #define DRAW_SIMPLE_TEST_TRIANGLE false
 
+#define MAX_POINT_LIGHTS 4
+
 // Functions
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void DoMovement();
 GLuint loadTexture(GLchar* path);
 
 // Camera
 Camera camera(glm::vec3(0.f, 0.f, 3.f));
 bool keys[1024];
+bool buttons[7];
 GLfloat lastX = SCREEN_WIDTH / 2, lastY = SCREEN_HEIGHT / 2;
 bool firstMouse = true;
 
 // Time
 GLfloat deltaTime = 0.f;
 GLfloat lastFrame = 0.f;
+
+// Editor bools
+bool editorIsUsingMouse = false;
+bool editorIsUsingKeyboard = false;
+
+
+// Creating lights
+DirectionalLight* dirLight = nullptr;
+vector<PointLight*> pointLights;
 
 //-----------------------------------
 
@@ -77,10 +91,14 @@ int main(char** argc, int argv)
 
 	glfwMakeContextCurrent(window);
 
+	Editor* editor = new Editor();
+	editor->Init(window);
+
 	// Set callbacks
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
+	glfwSetMouseButtonCallback(window, mouse_button_callback);
 
 	// Options
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -117,10 +135,19 @@ int main(char** argc, int argv)
 	map<int, pair<Shader*, Model*>> objects;
 	objects[0] = pair<Shader*, Model*>(&nanosuitShader, &nanosuitModel);
 
-	// Creating lights
-	DirectionalLight dirLight(glm::vec3(-0.2f, -1.0f, -0.3f), glm::vec3(0.05f, 0.05f, 0.05f), glm::vec3(0.4f, 0.4f, 0.4f), glm::vec3(0.5f, 0.5f, 0.5f));
-	vector<PointLight*> pointLights;
+	// Setting lights
+	dirLight = new DirectionalLight(glm::vec3(-0.2f, -1.0f, -0.3f), glm::vec3(0.05f, 0.05f, 0.05f), glm::vec3(0.4f, 0.4f, 0.4f), glm::vec3(0.5f, 0.5f, 0.5f));
 
+	PointLight p1(glm::vec3(0.0f, .0f, .0f), glm::vec3(0.05f, 0.05f, 0.05f), glm::vec3(0.8f, 0.8f, 0.8f), glm::vec3(1.0f, 1.0f, 1.0f));
+	PointLight p2(glm::vec3(0.0f, .0f, .0f), glm::vec3(0.05f, 0.05f, 0.05f), glm::vec3(0.8f, 0.8f, 0.8f), glm::vec3(1.0f, 1.0f, 1.0f));
+	PointLight p3(glm::vec3(0.0f, .0f, .0f), glm::vec3(0.05f, 0.05f, 0.05f), glm::vec3(0.8f, 0.8f, 0.8f), glm::vec3(1.0f, 1.0f, 1.0f));
+	PointLight p4(glm::vec3(0.0f, .0f, .0f), glm::vec3(0.05f, 0.05f, 0.05f), glm::vec3(0.8f, 0.8f, 0.8f), glm::vec3(1.0f, 1.0f, 1.0f));
+
+	pointLights.push_back(&p1);
+	pointLights.push_back(&p2);
+	pointLights.push_back(&p3);
+	pointLights.push_back(&p4);
+	
 	// Load simple triangle
 	unsigned int VBO, VAO;
 	if (DRAW_SIMPLE_TEST_TRIANGLE)
@@ -152,6 +179,9 @@ int main(char** argc, int argv)
 
 		// Check and call events
 		glfwPollEvents();
+		editor->NewFrame();
+		editorIsUsingKeyboard = editor->editorIsUsingKeyboard;
+		editorIsUsingMouse = editor->editorIsUsingMouse;
 		DoMovement();
 
 		// Clear buffs
@@ -179,7 +209,7 @@ int main(char** argc, int argv)
 
 				glUniform3f(glGetUniformLocation(currentShader->Program, "viewPos"), camera.position.x, camera.position.y, camera.position.z);
 
-				currentModel->Draw(*currentShader, &dirLight, pointLights);
+				currentModel->Draw(*currentShader, dirLight, pointLights);
 
 				glBindVertexArray(0);
 				glUseProgram(0);
@@ -205,13 +235,20 @@ int main(char** argc, int argv)
 			glBindVertexArray(0);
 			glUseProgram(0);
 		}
+
+		editor->Update();
 		
+		editor->Render();
 		// Swap buffers
 		glfwSwapBuffers(window);
 	}
 
+	editor->CleanUp();
 	// End glfw
 	glfwTerminate();
+
+	delete dirLight;
+	delete editor;
 
 	return 0;
 }
@@ -227,7 +264,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GL_TRUE);
 
-	if (action == GLFW_PRESS)
+	if (action == GLFW_PRESS && !editorIsUsingKeyboard)
 		keys[key] = true;
 	else if (action == GLFW_RELEASE)
 		keys[key] = false;
@@ -253,7 +290,16 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 	lastX = xpos;
 	lastY = ypos;
 
-	camera.ProcessMouseMovement(xoffset, yoffset);
+	if(buttons[GLFW_MOUSE_BUTTON_LEFT] && !editorIsUsingMouse)
+		camera.ProcessMouseMovement(xoffset, yoffset);
+}
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+	if (action == GLFW_PRESS)
+		buttons[button] = true;
+	else
+		buttons[button] = false;
 }
 
 void DoMovement()

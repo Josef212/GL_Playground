@@ -7,6 +7,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm\gtc\type_ptr.hpp>
 
+#include <vector>
+
 #include "Shader.h"
 
 struct PointLight
@@ -23,13 +25,26 @@ struct PointLight
 
 	glm::vec3 position;
 
-	float constant;
-	float linear;
-	float quadratic;
+	float constant = 1.f;
+	float linear = 0.09f;
+	float quadratic = 0.032;
+
+	bool enabled = true;
 
 	void SendInfoToShader(Shader* sh, int index)
 	{
-		
+		std::string num = std::to_string(index);
+		glUniform1i(glGetUniformLocation(sh->Program, ("pointLights[" + num + " ].enabled").c_str()), (enabled ? 1 : 0));
+		if (enabled)
+		{
+			glUniform3f(glGetUniformLocation(sh->Program, ("pointLights[" + num + " ].position").c_str()), position.x, position.y, position.z);
+			glUniform3f(glGetUniformLocation(sh->Program, ("pointLights[" + num + "].ambient").c_str()), ambient.x, ambient.y, ambient.z);
+			glUniform3f(glGetUniformLocation(sh->Program, ("pointLights[" + num + "].diffuse").c_str()), diffuse.x, diffuse.y, diffuse.z);
+			glUniform3f(glGetUniformLocation(sh->Program, ("pointLights[" + num + "].specular").c_str()), specular.x, specular.y, specular.z);
+			glUniform1f(glGetUniformLocation(sh->Program, ("pointLights[" + num + "].constant").c_str()), constant);
+			glUniform1f(glGetUniformLocation(sh->Program, ("pointLights[" + num + "].linear").c_str()), linear);
+			glUniform1f(glGetUniformLocation(sh->Program, ("pointLights[" + num + "].quadratic").c_str()), quadratic);
+		}
 	}
 	
 };
@@ -58,5 +73,8 @@ struct DirectionalLight
 	}
 
 };
+
+extern DirectionalLight* dirLight;
+extern std::vector<PointLight*> pointLights;
 
 #endif
