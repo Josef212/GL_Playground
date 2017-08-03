@@ -119,15 +119,8 @@ int main(char** argc, int argv)
 	// Load shaders
 
 	Shader basicShader("Shaders/basic_shader.vs", "Shaders/basic_shader.frag");
-	Shader nanosuitShader("Shaders/nanosuit_shader.vs", "Shaders/nanosuit_shader.frag", true);
 
 	// Load models
-
-	Model nanosuitModel("resources/objects/nanosuit/nanosuit.obj");
-	glm::mat4 nModel;
-	nModel = glm::translate(nModel, glm::vec3(0.f, -1.75f, 0.f));
-	nModel = glm::scale(nModel, glm::vec3(0.2f, 0.2f, 0.2f));
-	nanosuitModel.SetModelMatrix(nModel);
 
 	//.
 	//.
@@ -135,7 +128,6 @@ int main(char** argc, int argv)
 
 	// Map for all models to print with its shader associated
 	map<int, pair<Shader*, Model*>> objects;
-	objects[0] = pair<Shader*, Model*>(&nanosuitShader, &nanosuitModel);
 
 	// Setting lights
 	dirLight = new DirectionalLight(glm::vec3(-0.2f, -1.0f, -0.3f), glm::vec3(0.05f, 0.05f, 0.05f), glm::vec3(0.4f, 0.4f, 0.4f), glm::vec3(0.5f, 0.5f, 0.5f));
