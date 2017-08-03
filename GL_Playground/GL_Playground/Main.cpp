@@ -29,7 +29,7 @@ using namespace std;
 #define SCREEN_WIDTH	1280
 #define SCREEN_HEIGHT	720
 
-#define DRAW_SIMPLE_TEST_TRIANGLE false
+#define DRAW_SIMPLE_TEST_QUAD false
 
 #define MAX_POINT_LIGHTS 4
 
@@ -40,6 +40,8 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void DoMovement();
 GLuint loadTexture(GLchar* path);
+
+void DrawQuad(unsigned int VAO, Shader* sh, glm::vec3 pos, glm::vec3 scale);
 
 // Camera
 Camera camera(glm::vec3(0.f, 0.f, 3.f));
@@ -66,7 +68,10 @@ vector<PointLight*> pointLights;
 float vertices[] = {
 	-.5f, -.5f, 0.0f,
 	.5f, -.5f, 0.0f,
-	0.f,  .5f, 0.0f
+	0.5f,  .5f, 0.0f,
+	-.5f, .5f, 0.0f,
+	-.5f, -.5f, 0.0f,
+	0.5f,  .5f, 0.0f
 };
 
 //-----------------------------------
@@ -150,18 +155,16 @@ int main(char** argc, int argv)
 	
 	// Load simple triangle
 	unsigned int VBO, VAO;
-	if (DRAW_SIMPLE_TEST_TRIANGLE)
-	{
-		glGenVertexArrays(1, &VAO);
-		glBindVertexArray(VAO);
 
-		glGenBuffers(1, &VBO);
-		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
 
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(0);
-	}
+	glGenBuffers(1, &VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
 
 
 	//Option: Draw wireframe.
@@ -216,24 +219,21 @@ int main(char** argc, int argv)
 			}
 		}
 
-		if (DRAW_SIMPLE_TEST_TRIANGLE)
+		if (editor->drawQuadOnLights)
 		{
-			basicShader.Use();
+			for (int i = 0; i < pointLights.size(); ++i)
+			{
+				PointLight* p = pointLights[i];
+				if (p->enabled)
+				{
+					DrawQuad(VAO, &basicShader, p->position, glm::vec3(.25f, .25f, .0f));
+				}
+			}
+		}
 
-			glm::mat4 model;
-			model = glm::translate(model, glm::vec3(0.f, -1.25f, 0.f));
-			glm::mat4 view = camera.GetViewMatrix();
-			glm::mat4 proj = glm::perspective(camera.zoom, (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.f);
-
-			glUniformMatrix4fv(glGetUniformLocation(basicShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-			glUniformMatrix4fv(glGetUniformLocation(basicShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
-			glUniformMatrix4fv(glGetUniformLocation(basicShader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(proj));
-
-			glBindVertexArray(VAO);
-			glDrawArrays(GL_TRIANGLES, 0, 3);
-
-			glBindVertexArray(0);
-			glUseProgram(0);
+		if (DRAW_SIMPLE_TEST_QUAD)
+		{
+			DrawQuad(VAO, &basicShader, glm::vec3(0.0f, -1.25f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
 		}
 
 		editor->Update();
@@ -343,4 +343,25 @@ GLuint loadTexture(GLchar* path)
 	SOIL_free_image_data(image);
 
 	return textureID;
+}
+
+void DrawQuad(unsigned int VAO, Shader* sh, glm::vec3 pos, glm::vec3 scale)
+{
+	sh->Use();
+
+	glm::mat4 model;
+	model = glm::translate(model, pos);
+	model = glm::scale(model, scale);
+	glm::mat4 view = camera.GetViewMatrix();
+	glm::mat4 proj = glm::perspective(camera.zoom, (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.f);
+
+	glUniformMatrix4fv(glGetUniformLocation(sh->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+	glUniformMatrix4fv(glGetUniformLocation(sh->Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
+	glUniformMatrix4fv(glGetUniformLocation(sh->Program, "projection"), 1, GL_FALSE, glm::value_ptr(proj));
+
+	glBindVertexArray(VAO);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	glBindVertexArray(0);
+	glUseProgram(0);
 }

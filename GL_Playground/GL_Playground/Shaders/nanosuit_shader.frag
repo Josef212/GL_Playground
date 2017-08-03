@@ -60,6 +60,9 @@ void main()
     		result += CalcPointLight(pointLights[i], norm, FragPos, viewDir);
 
     FragColor = vec4(result, 1.0f);
+    //FragColor = vec4(float(pointLights[0].enabled), 0.0f, 0.0f, 1.0f);
+    float a = float(pointLights[0].enabled);
+    //FragColor = vec4(a, 0.0f, 0.0f, 1.0f);
 }
 
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)

@@ -46,6 +46,13 @@ void Editor::Update()
 			ImGui::EndMenu();
 		}
 
+		if (ImGui::BeginMenu("Debug"))
+		{
+			ImGui::MenuItem("Point light positions", nullptr, &drawQuadOnLights);
+
+			ImGui::EndMenu();
+		}
+
 		ImGui::EndMainMenuBar();
 	}
 

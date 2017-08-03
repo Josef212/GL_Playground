@@ -34,17 +34,16 @@ struct PointLight
 	void SendInfoToShader(Shader* sh, int index)
 	{
 		std::string num = std::to_string(index);
-		glUniform1i(glGetUniformLocation(sh->Program, ("pointLights[" + num + " ].enabled").c_str()), (enabled ? 1 : 0));
-		if (enabled)
-		{
-			glUniform3f(glGetUniformLocation(sh->Program, ("pointLights[" + num + " ].position").c_str()), position.x, position.y, position.z);
-			glUniform3f(glGetUniformLocation(sh->Program, ("pointLights[" + num + "].ambient").c_str()), ambient.x, ambient.y, ambient.z);
-			glUniform3f(glGetUniformLocation(sh->Program, ("pointLights[" + num + "].diffuse").c_str()), diffuse.x, diffuse.y, diffuse.z);
-			glUniform3f(glGetUniformLocation(sh->Program, ("pointLights[" + num + "].specular").c_str()), specular.x, specular.y, specular.z);
-			glUniform1f(glGetUniformLocation(sh->Program, ("pointLights[" + num + "].constant").c_str()), constant);
-			glUniform1f(glGetUniformLocation(sh->Program, ("pointLights[" + num + "].linear").c_str()), linear);
-			glUniform1f(glGetUniformLocation(sh->Program, ("pointLights[" + num + "].quadratic").c_str()), quadratic);
-		}
+		glUniform1i(glGetUniformLocation(sh->Program, ("pointLights[" + num + " ].enabled").c_str()), (enabled == true ? 1 : 0));
+		
+		glUniform3f(glGetUniformLocation(sh->Program, ("pointLights[" + num + " ].position").c_str()), position.x, position.y, position.z);
+		glUniform3f(glGetUniformLocation(sh->Program, ("pointLights[" + num + "].ambient").c_str()), ambient.x, ambient.y, ambient.z);
+		glUniform3f(glGetUniformLocation(sh->Program, ("pointLights[" + num + "].diffuse").c_str()), diffuse.x, diffuse.y, diffuse.z);
+		glUniform3f(glGetUniformLocation(sh->Program, ("pointLights[" + num + "].specular").c_str()), specular.x, specular.y, specular.z);
+		glUniform1f(glGetUniformLocation(sh->Program, ("pointLights[" + num + "].constant").c_str()), constant);
+		glUniform1f(glGetUniformLocation(sh->Program, ("pointLights[" + num + "].linear").c_str()), linear);
+		glUniform1f(glGetUniformLocation(sh->Program, ("pointLights[" + num + "].quadratic").c_str()), quadratic);
+		
 	}
 	
 };

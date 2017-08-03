@@ -24,6 +24,8 @@ public:
 	bool editorIsUsingMouse = false;
 	bool editorIsUsingKeyboard = false;
 
+	bool drawQuadOnLights = false;
+
 private:
 	bool dirLightEditorWin = false;
 	bool pointLightsEditorWin = false;
