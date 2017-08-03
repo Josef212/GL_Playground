@@ -15,6 +15,7 @@ using namespace std;
 #include "Camera.h"
 #include "Shader.h"
 #include "Model.h"
+#include "Ligth.h"
 
 //GLM
 #include <glm\glm.hpp>
@@ -98,7 +99,7 @@ int main(char** argc, int argv)
 	// Load shaders
 
 	Shader basicShader("Shaders/basic_shader.vs", "Shaders/basic_shader.frag");
-	Shader nanosuitShader("Shaders/nanosuit_shader.vs", "Shaders/nanosuit_shader.frag");
+	Shader nanosuitShader("Shaders/nanosuit_shader.vs", "Shaders/nanosuit_shader.frag", true);
 
 	// Load models
 
@@ -115,6 +116,10 @@ int main(char** argc, int argv)
 	// Map for all models to print with its shader associated
 	map<int, pair<Shader*, Model*>> objects;
 	objects[0] = pair<Shader*, Model*>(&nanosuitShader, &nanosuitModel);
+
+	// Creating lights
+	DirectionalLight dirLight(glm::vec3(-0.2f, -1.0f, -0.3f), glm::vec3(0.05f, 0.05f, 0.05f), glm::vec3(0.4f, 0.4f, 0.4f), glm::vec3(0.5f, 0.5f, 0.5f));
+	vector<PointLight*> pointLights;
 
 	// Load simple triangle
 	unsigned int VBO, VAO;
@@ -172,7 +177,9 @@ int main(char** argc, int argv)
 				glUniformMatrix4fv(glGetUniformLocation(currentShader->Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
 				glUniformMatrix4fv(glGetUniformLocation(currentShader->Program, "projection"), 1, GL_FALSE, glm::value_ptr(proj));
 
-				currentModel->Draw(*currentShader);
+				glUniform3f(glGetUniformLocation(currentShader->Program, "viewPos"), camera.position.x, camera.position.y, camera.position.z);
+
+				currentModel->Draw(*currentShader, &dirLight, pointLights);
 
 				glBindVertexArray(0);
 				glUseProgram(0);

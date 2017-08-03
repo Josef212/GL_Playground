@@ -20,6 +20,7 @@ using namespace std;
 #include <assimp/postprocess.h>
 
 #include "Mesh.h"
+#include "Ligth.h"
 
 GLint TextureFromFile(const char* path, string directory);
 
@@ -34,10 +35,10 @@ public:
 	}
 
 	// Draws the model, and thus all its meshes
-	void Draw(Shader shader)
+	void Draw(Shader shader, DirectionalLight* dirL, vector<PointLight*> pointLihts)
 	{
 		for (GLuint i = 0; i < this->meshes.size(); i++)
-			this->meshes[i].Draw(shader);
+			this->meshes[i].Draw(shader, dirL, pointLihts);
 	}
 
 	// Set model matrix

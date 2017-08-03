@@ -29,7 +29,7 @@ struct PointLight
 
 	void SendInfoToShader(Shader* sh, int index)
 	{
-
+		
 	}
 	
 };
@@ -50,7 +50,11 @@ struct DirectionalLight
 
 	void SendInfoToShader(Shader* sh)
 	{
+		glUniform3f(glGetUniformLocation(sh->Program, "dirLight.direction"), direction.x, direction.y, direction.z);
 
+		glUniform3f(glGetUniformLocation(sh->Program, "dirLight.ambient"), ambient.x, ambient.y, ambient.z);
+		glUniform3f(glGetUniformLocation(sh->Program, "dirLight.diffuse"), diffuse.x, diffuse.y, diffuse.z);
+		glUniform3f(glGetUniformLocation(sh->Program, "dirLight.specular"), specular.x, specular.y, specular.z);
 	}
 
 };

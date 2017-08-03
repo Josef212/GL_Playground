@@ -14,6 +14,7 @@ using namespace std;
 
 #include <assimp\IOStream.hpp>
 #include "Shader.h"
+#include "Ligth.h"
 
 struct Vertex {
 	// Position
@@ -50,7 +51,7 @@ public:
 	}
 
 	// Render the mesh
-	void Draw(Shader shader)
+	void Draw(Shader shader, DirectionalLight* dirL, vector<PointLight*> pointLihts)
 	{
 		// Bind appropriate textures
 		GLuint diffuseNr = 1;
@@ -74,7 +75,19 @@ public:
 		}
 
 		// Also set each mesh's shininess property to a default value (if you want you could extend this to another mesh property and possibly change this value)
-		glUniform1f(glGetUniformLocation(shader.Program, "material.shininess"), 16.0f);
+		// Shininess is no longer in a material since textures arent in it.
+		glUniform1f(glGetUniformLocation(shader.Program, "shininess"), 16.0f);
+
+		// Sending light info
+		if (shader.useLights)
+		{
+			dirL->SendInfoToShader(&shader);
+			for (int i = 0; i < pointLihts.size(); ++i)
+			{
+				pointLihts[i]->SendInfoToShader(&shader, i);
+			}
+			glUniform1f(glGetUniformLocation(shader.Program, "point_lights_count"), pointLihts.size());
+		}
 
 		// Draw mesh
 		glBindVertexArray(this->VAO);
