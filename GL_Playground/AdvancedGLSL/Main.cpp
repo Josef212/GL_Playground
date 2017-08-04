@@ -121,6 +121,7 @@ int main(char** argc, int argv)
 
 	Shader basicShader("Shaders/basic_shader.vs", "Shaders/basic_shader.frag");
 	Shader pointSizeShader("Shaders/point_size_shader.vs", "Shaders/point_size_shader.frag");
+	Shader triangleShader("Shaders/triangle_shader.vs", "Shaders/triangle_shader.frag");
 
 	// Load models
 
@@ -200,9 +201,19 @@ int main(char** argc, int argv)
 			}
 		}
 
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		// Print a quad's vvertex as points setting its point size from shader
 		DrawQuad(VAO, &pointSizeShader, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), GL_POINTS);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+		// Print a triangle using in shader vertices // Not working properly
+		/*triangleShader.Use();
+		glm::mat4 view = camera.GetViewMatrix();
+		glm::mat4 proj = glm::perspective(camera.zoom, (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.f);
+		glm::mat4 model;
+		glUniformMatrix4fv(glGetUniformLocation(triangleShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+		glUniformMatrix4fv(glGetUniformLocation(triangleShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(triangleShader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(proj));
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glUseProgram(0);*/
 
 		if (DRAW_SIMPLE_TEST_QUAD)
 		{
