@@ -40,6 +40,7 @@ void DoMovement();
 GLuint loadTexture(GLchar* path);
 
 void DrawQuad(unsigned int VAO, Shader* sh, glm::vec3 pos, glm::vec3 scale, GLenum mode);
+void DrawCube(unsigned int VAO, Shader* sh, glm::vec3 pos, glm::vec3 scale, GLenum mode, bool mustUseShader = true);
 
 // Camera
 Camera camera(glm::vec3(0.f, 0.f, 3.f));
@@ -62,13 +63,57 @@ DirectionalLight* dirLight = nullptr;
 
 //-----------------------------------
 
-float vertices[] = {
+float qVertices[] = {
 	-.5f, -.5f, 0.0f,
 	.5f, -.5f, 0.0f,
 	0.5f,  .5f, 0.0f,
 	-.5f, .5f, 0.0f,
 	-.5f, -.5f, 0.0f,
 	0.5f,  .5f, 0.0f
+};
+
+float cVertices[] = {
+	-0.5f, -0.5f, -0.5f,	0.0f,  0.0f, -1.0f,		1.0f, 0.0f,
+	0.5f, -0.5f, -0.5f,		0.0f,  0.0f, -1.0f,		0.0f, 0.0f,
+	0.5f,  0.5f, -0.5f,		0.0f,  0.0f, -1.0f,		0.0f, 1.0f,
+	0.5f,  0.5f, -0.5f,		0.0f,  0.0f, -1.0f,		0.0f, 1.0f,
+	-0.5f,  0.5f, -0.5f,	0.0f,  0.0f, -1.0f,		1.0f, 1.0f,
+	-0.5f, -0.5f, -0.5f,	0.0f,  0.0f, -1.0f,		1.0f, 0.0f,
+
+	-0.5f, -0.5f,  0.5f,	0.0f,  0.0f,  1.0f,		0.0f, 0.0f,
+	0.5f, -0.5f,  0.5f,		0.0f,  0.0f,  1.0f,		1.0f, 0.0f,
+	0.5f,  0.5f,  0.5f,		0.0f,  0.0f,  1.0f,		1.0f, 1.0f,
+	0.5f,  0.5f,  0.5f,		0.0f,  0.0f,  1.0f,		1.0f, 1.0f,
+	-0.5f,  0.5f,  0.5f,	0.0f,  0.0f,  1.0f,		0.0f, 1.0f,
+	-0.5f, -0.5f,  0.5f,	0.0f,  0.0f,  1.0f,		0.0f, 0.0f,
+
+	-0.5f,  0.5f,  0.5f,	-1.0f,  0.0f,  0.0f,	1.0f, 1.0f,
+	-0.5f,  0.5f, -0.5f,	-1.0f,  0.0f,  0.0f,	0.0f, 1.0f,
+	-0.5f, -0.5f, -0.5f,	-1.0f,  0.0f,  0.0f,	0.0f, 0.0f,
+	-0.5f, -0.5f, -0.5f,	-1.0f,  0.0f,  0.0f,	0.0f, 0.0f,
+	-0.5f, -0.5f,  0.5f,	-1.0f,  0.0f,  0.0f,	1.0f, 0.0f,
+	-0.5f,  0.5f,  0.5f,	-1.0f,  0.0f,  0.0f,	1.0f, 1.0f,
+
+	0.5f,  0.5f,  0.5f,		1.0f,  0.0f,  0.0f,		0.0f, 1.0f,
+	0.5f,  0.5f, -0.5f,		1.0f,  0.0f,  0.0f,		1.0f, 1.0f,
+	0.5f, -0.5f, -0.5f,		1.0f,  0.0f,  0.0f,		1.0f, 0.0f,
+	0.5f, -0.5f, -0.5f,		1.0f,  0.0f,  0.0f,		1.0f, 0.0f,
+	0.5f, -0.5f,  0.5f,		1.0f,  0.0f,  0.0f,		0.0f, 0.0f,
+	0.5f,  0.5f,  0.5f,		1.0f,  0.0f,  0.0f,		0.0f, 1.0f,
+
+	-0.5f, -0.5f, -0.5f,	0.0f, -1.0f,  0.0f,		1.0f, 1.0f,
+	0.5f, -0.5f, -0.5f,		0.0f, -1.0f,  0.0f,		0.0f, 1.0f,
+	0.5f, -0.5f,  0.5f,		0.0f, -1.0f,  0.0f,		0.0f, 0.0f,
+	0.5f, -0.5f,  0.5f,		0.0f, -1.0f,  0.0f,		0.0f, 0.0f,
+	-0.5f, -0.5f,  0.5f,	0.0f, -1.0f,  0.0f,		1.0f, 0.0f,
+	-0.5f, -0.5f, -0.5f,	0.0f, -1.0f,  0.0f,		1.0f, 1.0f,
+
+	-0.5f,  0.5f, -0.5f,	0.0f,  1.0f,  0.0f,		0.0f, 1.0f,
+	0.5f,  0.5f, -0.5f,		0.0f,  1.0f,  0.0f,		1.0f, 1.0f,
+	0.5f,  0.5f,  0.5f,		0.0f,  1.0f,  0.0f,		1.0f, 0.0f,
+	0.5f,  0.5f,  0.5f,		0.0f,  1.0f,  0.0f,		1.0f, 0.0f,
+	-0.5f,  0.5f,  0.5f,	0.0f,  1.0f,  0.0f,		0.0f, 0.0f,
+	-0.5f,  0.5f, -0.5f,	0.0f,  1.0f,  0.0f,		0.0f, 1.0f
 };
 
 //-----------------------------------
@@ -117,17 +162,26 @@ int main(char** argc, int argv)
 	glDepthFunc(GL_LESS);
 	glEnable(GL_PROGRAM_POINT_SIZE);
 
+	/*glEnable(GL_CULL_FACE);
+	glCullFace(GL_FRONT);*/
+
 	// Load shaders
 
 	Shader basicShader("Shaders/basic_shader.vs", "Shaders/basic_shader.frag");
 	Shader pointSizeShader("Shaders/point_size_shader.vs", "Shaders/point_size_shader.frag");
 	Shader triangleShader("Shaders/triangle_shader.vs", "Shaders/triangle_shader.frag");
+	Shader fragCoordShader("Shaders/frag_coord_shader.vs", "Shaders/frag_coord_shader.frag");
+	Shader frontFacingShader("Shaders/front_facing_shader.vs", "Shaders/front_facing_shader.frag");
 
 	// Load models
 
 	//.
 	//.
 	//..
+
+	// Load individual textures
+	GLuint checkerTexture = loadTexture("resources/textures/checker.jpg");
+	GLuint matrixTexture = loadTexture("resources/textures/matrix.jpg");
 
 	// Map for all models to print with its shader associated
 	map<int, pair<Shader*, Model*>> objects;
@@ -136,17 +190,35 @@ int main(char** argc, int argv)
 	dirLight = new DirectionalLight(glm::vec3(-0.2f, -1.0f, -0.3f), glm::vec3(0.05f, 0.05f, 0.05f), glm::vec3(0.4f, 0.4f, 0.4f), glm::vec3(0.5f, 0.5f, 0.5f));
 	
 	// Load simple triangle
-	unsigned int VBO, VAO;
+	unsigned int qVBO, qVAO;
+	glGenVertexArrays(1, &qVAO);
+	glBindVertexArray(qVAO);
 
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
-
-	glGenBuffers(1, &VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glGenBuffers(1, &qVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, qVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(qVertices), qVertices, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
+
+	// Load a cube
+	unsigned int cVBO, cVAO;
+	glGenVertexArrays(1, &cVAO);
+	glGenBuffers(1, &cVBO);
+
+	glBindVertexArray(cVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, cVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cVertices), cVertices, GL_STATIC_DRAW);
+
+	// position attribute
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	// normal attribute
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+	// tex coords
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
 
 
 	//Option: Draw wireframe.
@@ -202,7 +274,20 @@ int main(char** argc, int argv)
 		}
 
 		// Print a quad's vvertex as points setting its point size from shader
-		DrawQuad(VAO, &pointSizeShader, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), GL_POINTS);
+		DrawQuad(qVAO, &pointSizeShader, glm::vec3(2.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), GL_POINTS);
+
+		// Print a quad with colors according of frag coords
+		DrawQuad(qVAO, &fragCoordShader, glm::vec3(0.0f, 0.f, 0.f), glm::vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES);
+
+		// Print a cube
+		frontFacingShader.Use();
+		glActiveTexture(GL_TEXTURE0);
+		glUniform1i(glGetUniformLocation(frontFacingShader.Program, "checkers"), 0);
+		glBindTexture(GL_TEXTURE_2D, checkerTexture);
+		glActiveTexture(GL_TEXTURE1);
+		glUniform1i(glGetUniformLocation(frontFacingShader.Program, "matrix"), 1);
+		glBindTexture(GL_TEXTURE_2D, matrixTexture);
+		DrawCube(cVAO, &frontFacingShader, glm::vec3(-2.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES, false);
 
 		// Print a triangle using in shader vertices // Not working properly
 		/*triangleShader.Use();
@@ -217,7 +302,7 @@ int main(char** argc, int argv)
 
 		if (DRAW_SIMPLE_TEST_QUAD)
 		{
-			DrawQuad(VAO, &basicShader, glm::vec3(0.0f, -1.25f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES);
+			DrawQuad(qVAO, &basicShader, glm::vec3(0.0f, -1.25f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES);
 		}
 
 		editor->Update();
@@ -345,6 +430,28 @@ void DrawQuad(unsigned int VAO, Shader* sh, glm::vec3 pos, glm::vec3 scale, GLen
 
 	glBindVertexArray(VAO);
 	glDrawArrays(mode, 0, 6);
+
+	glBindVertexArray(0);
+	glUseProgram(0);
+}
+
+void DrawCube(unsigned int VAO, Shader* sh, glm::vec3 pos, glm::vec3 scale, GLenum mode, bool mustUseShader)
+{
+	if(mustUseShader)
+		sh->Use();
+
+	glm::mat4 model;
+	model = glm::translate(model, pos);
+	model = glm::scale(model, scale);
+	glm::mat4 view = camera.GetViewMatrix();
+	glm::mat4 proj = glm::perspective(camera.zoom, (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.f);
+
+	glUniformMatrix4fv(glGetUniformLocation(sh->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+	glUniformMatrix4fv(glGetUniformLocation(sh->Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
+	glUniformMatrix4fv(glGetUniformLocation(sh->Program, "projection"), 1, GL_FALSE, glm::value_ptr(proj));
+
+	glBindVertexArray(VAO);
+	glDrawArrays(mode, 0, 36);
 
 	glBindVertexArray(0);
 	glUseProgram(0);
