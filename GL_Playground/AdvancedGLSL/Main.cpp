@@ -39,7 +39,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 void DoMovement();
 GLuint loadTexture(GLchar* path);
 
-void DrawQuad(unsigned int VAO, Shader* sh, glm::vec3 pos, glm::vec3 scale);
+void DrawQuad(unsigned int VAO, Shader* sh, glm::vec3 pos, glm::vec3 scale, GLenum mode);
 
 // Camera
 Camera camera(glm::vec3(0.f, 0.f, 3.f));
@@ -115,10 +115,12 @@ int main(char** argc, int argv)
 	// Setup some OpenGL options
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
+	glEnable(GL_PROGRAM_POINT_SIZE);
 
 	// Load shaders
 
 	Shader basicShader("Shaders/basic_shader.vs", "Shaders/basic_shader.frag");
+	Shader pointSizeShader("Shaders/point_size_shader.vs", "Shaders/point_size_shader.frag");
 
 	// Load models
 
@@ -198,9 +200,13 @@ int main(char** argc, int argv)
 			}
 		}
 
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		DrawQuad(VAO, &pointSizeShader, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), GL_POINTS);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
 		if (DRAW_SIMPLE_TEST_QUAD)
 		{
-			DrawQuad(VAO, &basicShader, glm::vec3(0.0f, -1.25f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+			DrawQuad(VAO, &basicShader, glm::vec3(0.0f, -1.25f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES);
 		}
 
 		editor->Update();
@@ -312,7 +318,7 @@ GLuint loadTexture(GLchar* path)
 	return textureID;
 }
 
-void DrawQuad(unsigned int VAO, Shader* sh, glm::vec3 pos, glm::vec3 scale)
+void DrawQuad(unsigned int VAO, Shader* sh, glm::vec3 pos, glm::vec3 scale, GLenum mode)
 {
 	sh->Use();
 
@@ -327,7 +333,7 @@ void DrawQuad(unsigned int VAO, Shader* sh, glm::vec3 pos, glm::vec3 scale)
 	glUniformMatrix4fv(glGetUniformLocation(sh->Program, "projection"), 1, GL_FALSE, glm::value_ptr(proj));
 
 	glBindVertexArray(VAO);
-	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glDrawArrays(mode, 0, 6);
 
 	glBindVertexArray(0);
 	glUseProgram(0);
