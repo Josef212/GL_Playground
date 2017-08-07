@@ -39,7 +39,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 void DoMovement();
 GLuint loadTexture(GLchar* path);
 
-void DrawQuad(unsigned int VAO, Shader* sh, glm::vec3 pos, glm::vec3 scale, GLenum mode);
+void Draw(unsigned int VAO, int size, Shader* sh, glm::vec3 pos, glm::vec3 scale, GLenum mode);
 void DrawCube(unsigned int VAO, Shader* sh, glm::vec3 pos, glm::vec3 scale, GLenum mode, bool mustUseShader = true);
 
 // Camera
@@ -172,6 +172,7 @@ int main(char** argc, int argv)
 	Shader triangleShader("Shaders/triangle_shader.vs", "Shaders/triangle_shader.frag");
 	Shader fragCoordShader("Shaders/frag_coord_shader.vs", "Shaders/frag_coord_shader.frag");
 	Shader frontFacingShader("Shaders/front_facing_shader.vs", "Shaders/front_facing_shader.frag");
+	Shader uniformBlockShader("Shaders/uniform_blocks_shader.vs", "Shaders/uniform_blocks_shader.frag");
 
 	// Load models
 
@@ -245,9 +246,6 @@ int main(char** argc, int argv)
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// Light pos
-		glm::vec3 lightPos = camera.position;
-
 		for (auto it : objects)
 		{
 			Shader* currentShader = it.second.first;
@@ -274,10 +272,10 @@ int main(char** argc, int argv)
 		}
 
 		// Print a quad's vvertex as points setting its point size from shader
-		DrawQuad(qVAO, &pointSizeShader, glm::vec3(2.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), GL_POINTS);
+		Draw(qVAO, 6, &pointSizeShader, glm::vec3(2.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), GL_POINTS);
 
 		// Print a quad with colors according of frag coords
-		DrawQuad(qVAO, &fragCoordShader, glm::vec3(0.0f, 0.f, 0.f), glm::vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES);
+		Draw(qVAO, 6, &fragCoordShader, glm::vec3(0.0f, 0.f, 0.f), glm::vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES);
 
 		// Print a cube
 		frontFacingShader.Use();
@@ -302,7 +300,7 @@ int main(char** argc, int argv)
 
 		if (DRAW_SIMPLE_TEST_QUAD)
 		{
-			DrawQuad(qVAO, &basicShader, glm::vec3(0.0f, -1.25f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES);
+			Draw(qVAO, 6, &basicShader, glm::vec3(0.0f, -1.25f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES);
 		}
 
 		editor->Update();
@@ -414,7 +412,7 @@ GLuint loadTexture(GLchar* path)
 	return textureID;
 }
 
-void DrawQuad(unsigned int VAO, Shader* sh, glm::vec3 pos, glm::vec3 scale, GLenum mode)
+void Draw(unsigned int VAO, int size, Shader* sh, glm::vec3 pos, glm::vec3 scale, GLenum mode)
 {
 	sh->Use();
 
@@ -429,7 +427,7 @@ void DrawQuad(unsigned int VAO, Shader* sh, glm::vec3 pos, glm::vec3 scale, GLen
 	glUniformMatrix4fv(glGetUniformLocation(sh->Program, "projection"), 1, GL_FALSE, glm::value_ptr(proj));
 
 	glBindVertexArray(VAO);
-	glDrawArrays(mode, 0, 6);
+	glDrawArrays(mode, 0, size);
 
 	glBindVertexArray(0);
 	glUseProgram(0);
