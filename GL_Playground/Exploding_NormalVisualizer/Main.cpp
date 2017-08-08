@@ -81,6 +81,8 @@ int main(char** argc, int argv)
 
 	// Load shaders
 	Shader explodingShader("Shaders/exploding_shader.vs", "Shaders/exploding_shader.frag", "Shaders/exploding_shader.geom");
+	Shader normalShader("Shaders/normal_visualizer_shader.vs", "Shaders/normal_visualizer_shader.frag", "Shaders/normal_visualizer_shader.geom");
+	Shader textureShader("Shaders/texture_shader.vs", "Shaders/texture_shader.frag");
 
 	//.
 	//..
@@ -108,7 +110,9 @@ int main(char** argc, int argv)
 
 		glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 1.0f, 100.0f);
 		glm::mat4 view = camera.GetViewMatrix();
+
 		glm::mat4 model;
+		model = glm::translate(model, glm::vec3(5.0f, 0.0f, 0.0f));
 		explodingShader.Use();
 		explodingShader.setMat4("projection", projection);
 		explodingShader.setMat4("view", view);
@@ -119,9 +123,24 @@ int main(char** argc, int argv)
 
 		// draw model
 		nano.Draw(explodingShader);
+				
+		// ===================================
 
+		model = glm::translate(model, glm::vec3(-10.0f, 0.0f, 0.0f));
+		textureShader.Use();
+		textureShader.setMat4("projection", projection);
+		textureShader.setMat4("view", view);
+		textureShader.setMat4("model", model);
 
+		nano.Draw(textureShader);
 
+		normalShader.Use();
+		normalShader.Use();
+		normalShader.setMat4("projection", projection);
+		normalShader.setMat4("view", view);
+		normalShader.setMat4("model", model);
+
+		nano.Draw(normalShader);
 
 		//------------------------------------
 
