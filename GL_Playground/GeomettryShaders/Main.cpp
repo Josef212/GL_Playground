@@ -29,8 +29,6 @@ using namespace std;
 #define SCREEN_WIDTH	1280
 #define SCREEN_HEIGHT	720
 
-#define DRAW_SIMPLE_TEST_QUAD false
-
 // Functions
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
@@ -38,8 +36,6 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void DoMovement();
 GLuint loadTexture(GLchar* path);
-
-void DrawQuad(unsigned int VAO, Shader* sh, glm::vec3 pos, glm::vec3 scale);
 
 // Camera
 Camera camera(glm::vec3(0.f, 0.f, 3.f));
@@ -119,31 +115,30 @@ int main(char** argc, int argv)
 	// Load shaders
 
 	Shader basicShader("Shaders/basic_shader.vs", "Shaders/basic_shader.frag");
+	Shader houseShader("Shaders/house_shader.vs", "Shaders/house_shader.frag", "Shaders/house_shader.geom");
 
 	// Load models
+	float points[] = {
+		-0.5f,  0.5f,	1.0f, 0.0f, 0.0f, // top-left
+		0.5f,  0.5f,	0.0f, 1.0f, 0.0f, // top-right
+		0.5f, -0.5f,	0.0f, 0.0f, 1.0f, // bottom-right
+		-0.5f, -0.5f,	1.0f, 1.0f, 0.0f  // bottom-left
+	};
+	unsigned int VBO, VAO;
+	glGenBuffers(1, &VBO);
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(points), &points, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2 * sizeof(float)));
+	glBindVertexArray(0);
 
 	//.
 	//.
 	//..
-
-	// Map for all models to print with its shader associated
-	map<int, pair<Shader*, Model*>> objects;
-
-	// Setting lights
-	dirLight = new DirectionalLight(glm::vec3(-0.2f, -1.0f, -0.3f), glm::vec3(0.05f, 0.05f, 0.05f), glm::vec3(0.4f, 0.4f, 0.4f), glm::vec3(0.5f, 0.5f, 0.5f));
-	
-	// Load simple triangle
-	unsigned int VBO, VAO;
-
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
-
-	glGenBuffers(1, &VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
 
 
 	//Option: Draw wireframe.
@@ -170,38 +165,10 @@ int main(char** argc, int argv)
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// Light pos
-		glm::vec3 lightPos = camera.position;
 
-		for (auto it : objects)
-		{
-			Shader* currentShader = it.second.first;
-			Model* currentModel = it.second.second;
-
-			if (currentShader && currentModel)
-			{
-				currentShader->Use();
-
-				glm::mat4 view = camera.GetViewMatrix();
-				glm::mat4 proj = glm::perspective(camera.zoom, (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.f);
-				
-				glUniformMatrix4fv(glGetUniformLocation(currentShader->Program, "model"), 1, GL_FALSE, currentModel->GetModelMatrixPtr());
-				glUniformMatrix4fv(glGetUniformLocation(currentShader->Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
-				glUniformMatrix4fv(glGetUniformLocation(currentShader->Program, "projection"), 1, GL_FALSE, glm::value_ptr(proj));
-
-				glUniform3f(glGetUniformLocation(currentShader->Program, "viewPos"), camera.position.x, camera.position.y, camera.position.z);
-
-				currentModel->Draw(*currentShader, dirLight);
-
-				glBindVertexArray(0);
-				glUseProgram(0);
-			}
-		}
-
-		if (DRAW_SIMPLE_TEST_QUAD)
-		{
-			DrawQuad(VAO, &basicShader, glm::vec3(0.0f, -1.25f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-		}
+		houseShader.Use();
+		glBindVertexArray(VAO);
+		glDrawArrays(GL_POINTS, 0, 4);
 
 		editor->Update();
 		
@@ -310,25 +277,4 @@ GLuint loadTexture(GLchar* path)
 	SOIL_free_image_data(image);
 
 	return textureID;
-}
-
-void DrawQuad(unsigned int VAO, Shader* sh, glm::vec3 pos, glm::vec3 scale)
-{
-	sh->Use();
-
-	glm::mat4 model;
-	model = glm::translate(model, pos);
-	model = glm::scale(model, scale);
-	glm::mat4 view = camera.GetViewMatrix();
-	glm::mat4 proj = glm::perspective(camera.zoom, (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.f);
-
-	glUniformMatrix4fv(glGetUniformLocation(sh->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-	glUniformMatrix4fv(glGetUniformLocation(sh->Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
-	glUniformMatrix4fv(glGetUniformLocation(sh->Program, "projection"), 1, GL_FALSE, glm::value_ptr(proj));
-
-	glBindVertexArray(VAO);
-	glDrawArrays(GL_TRIANGLES, 0, 6);
-
-	glBindVertexArray(0);
-	glUseProgram(0);
 }
