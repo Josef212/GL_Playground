@@ -79,6 +79,9 @@ int main(char** argc, int argv)
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+
 	// Load shaders
 	Shader explodingShader("Shaders/exploding_shader.vs", "Shaders/exploding_shader.frag", "Shaders/exploding_shader.geom");
 	Shader normalShader("Shaders/normal_visualizer_shader.vs", "Shaders/normal_visualizer_shader.frag", "Shaders/normal_visualizer_shader.geom");
